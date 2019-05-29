@@ -9,7 +9,7 @@ from keras.applications.inception_v3 import preprocess_input
 from keras.preprocessing.image import img_to_array
 import numpy as np
 from keras import backend as K
-import cifar100_subset
+#import datasets.cifar100_subset
 import PIL.Image
 
 

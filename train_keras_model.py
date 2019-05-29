@@ -13,8 +13,6 @@ import keras.backend as K
 import time
 import os
 import pickle
-from ModifiedSGD import ModifiedSGD
-
 
 def train_model(model, x_train, y_train, x_test, y_test, model_output_path=None, batch_size=128,
                 epochs=100, initial_lr=1e-3, lr_scheduler=None,

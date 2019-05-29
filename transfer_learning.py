@@ -8,9 +8,9 @@ This is a temporary script file.
 import os
 
 # Functions and classes for loading and using the Inception model.
-import inception
-import stl10
-from inception import transfer_values_cache
+import models.inception
+#import stl10
+from models.inception import transfer_values_cache
 
 from sklearn import svm
 import numpy as np
@@ -20,15 +20,15 @@ import classic_nets_imagenet
 # download the models / datasets
 def get_transfer_values_inception(dataset):
     data_dir = r'../data/'
-    inception.data_dir = os.path.join(data_dir, 'inception/')
+    models.inception.data_dir = os.path.join(data_dir, 'inception/')
     dataset.data_dir = os.path.join(data_dir, dataset.name + r'/')
     if not os.path.exists(dataset.data_dir):
         os.mkdir(dataset.data_dir)
-    inception.maybe_download()
+    models.inception.maybe_download()
 #    dataset.maybe_download()
     
     #load the inception model
-    model = inception.Inception()
+    model = models.inception.Inception()
     
     #load the dataset data
 #    images_train, cls_train, labels_train = dataset.load_training_data()
