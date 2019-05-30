@@ -19,7 +19,7 @@ import classic_nets_imagenet
 
 # download the models / datasets
 def get_transfer_values_inception(dataset):
-    data_dir = r'../data/'
+    data_dir = r'./data/'
     models.inception.data_dir = os.path.join(data_dir, 'inception/')
     dataset.data_dir = os.path.join(data_dir, dataset.name + r'/')
     if not os.path.exists(dataset.data_dir):
@@ -85,7 +85,7 @@ def get_transfer_values_classic_networks(dataset, network_name):
     #         pickle.dump(history, file_pi)
 
     print("Transfering training set")
-    print(file_path_cache_train)
+
     if os.path.exists(file_path_cache_train):
         print("training set already exist on disk")
         with open(file_path_cache_train, "rb") as pick_file:
@@ -117,9 +117,6 @@ def transfer_values_svm_scores(train_x, train_y, test_x, test_y):
         print("evaluating svm")
         test_scores = clf.predict_proba(test_x)
         print('accuracy for svm = ', str(np.mean(np.argmax(test_scores, axis=1) == test_y)))
-        print(np.mean(np.argmax(test_scores, axis=1)))
-        print(test_y)
-        print("evaluating answer")
     else:
         test_scores = []
     train_scores = clf.predict_proba(train_x)

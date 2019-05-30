@@ -17,7 +17,7 @@ class Cifar100_Model(ModelLib.ModelLib):
     def build_classifier_model(self, dataset, n_classes=5,
                                activation='elu', dropout_1_rate=0.25,
                                dropout_2_rate=0.5,
-                               reg_factor=200e-4, bias_reg_factor=None, batch_norm=False):
+                               reg_factor=50e-4, bias_reg_factor=None, batch_norm=False):
         
         n_classes = dataset.n_classes
         
