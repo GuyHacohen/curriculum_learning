@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Jan 31 15:03:40 2018
 
-@author: stenly
-"""
+
 import os
 import download
 import sys
@@ -52,9 +49,7 @@ class Cifar100_Subset(datasets.Dataset.Dataset):
         if smaller_data_size is not None:
             self.smaller_data_set = True
             self.data_size = smaller_data_size
-        super(Cifar100_Subset, self).__init__(smaller_data_size, normalize,
-                                              cross_val, val_size=500,
-                                              order=order, order_name=order_name)
+        super(Cifar100_Subset, self).__init__(normalize=normalize)
 
     def _load_batch(self, fpath, label_key='labels'):
         """Internal utility for parsing CIFAR data.
@@ -145,16 +140,23 @@ class Cifar100_Subset(datasets.Dataset.Dataset):
         super(Cifar100_Subset, self).update_data_set(smaller_data_set)
 
     def normalize_dataset(self):
-        self.x_train = (self.x_train - 128.) / 128
-        # x_test = x_test.astype('float32')
-        self.x_test = (self.x_test - 128.) / 128
-
-    def normalize_vgg(self):
-        #this function normalize inputs for zero mean and unit variance
-        # it is used when training a model.
-        # Input: training set and test set
-        # Output: normalized training set and test set according to the trianing set statistics.
-        mean = np.mean(self.x_train, axis=(0,1,2,3))
-        std = np.std(self.x_train, axis=(0, 1, 2, 3))
-        self.x_train = (self.x_train-mean)/(std+1e-7)
-        self.x_test = (self.x_test-mean)/(std+1e-7)
+        if not self.normalized:
+            self.x_train = self.x_train.astype('float32')
+            self.x_test = self.x_test.astype('float32')
+            mean_r = np.mean(self.x_train[:,:,:,0])
+            mean_g = np.mean(self.x_train[:,:,:,1])
+            mean_b = np.mean(self.x_train[:,:,:,2])
+            
+            std_r = np.std(self.x_train[:,:,:,0])
+            std_g = np.std(self.x_train[:,:,:,1])
+            std_b = np.std(self.x_train[:,:,:,2])
+            
+            
+            self.x_train[:,:,:,0] = (self.x_train[:,:,:,0] - mean_r) / std_r
+            self.x_train[:,:,:,1] = (self.x_train[:,:,:,1] - mean_g) / std_g
+            self.x_train[:,:,:,2] = (self.x_train[:,:,:,2] - mean_b) / std_b
+            
+            self.x_test[:,:,:,0] = (self.x_test[:,:,:,0] - mean_r) / std_r
+            self.x_test[:,:,:,1] = (self.x_test[:,:,:,1] - mean_g) / std_g
+            self.x_test[:,:,:,2] = (self.x_test[:,:,:,2] - mean_b) / std_b
+        self.normalized = True

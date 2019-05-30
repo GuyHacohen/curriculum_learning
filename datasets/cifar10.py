@@ -6,13 +6,6 @@ Created on Tue Jul 10 10:58:27 2018
 @author: guy.hacohen
 """
 
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Jan 31 15:03:40 2018
-
-@author: stenly
-"""
 import os
 import download
 import sys
@@ -22,15 +15,6 @@ import numpy as np
 from datasets.Dataset import one_hot_encoded
 import datasets.Dataset
 
-# Various directories and file-names.
-def array_to_str(arr):
-    res = ""
-    for i in arr:
-        res += str(i) + "_"
-    if arr:
-        res = res[:-1]
-    return res
-    
 class Cifar10(datasets.Dataset.Dataset):
 
     def __init__(self, smaller_data_size=None, normalize=True):
@@ -122,16 +106,14 @@ class Cifar10(datasets.Dataset.Dataset):
         return x_test, np.array(y_test), y_test_labels
 
     def normalize_dataset(self):
-        self.x_train = (self.x_train - 128.) / 128
-        # x_test = x_test.astype('float32')
-        self.x_test = (self.x_test - 128.) / 128
 
-    def normalize_vgg(self):
         #this function normalize inputs for zero mean and unit variance
         # it is used when training a model.
         # Input: training set and test set
         # Output: normalized training set and test set according to the trianing set statistics.
-        mean = np.mean(self.x_train, axis=(0,1,2,3))
-        std = np.std(self.x_train, axis=(0, 1, 2, 3))
-        self.x_train = (self.x_train-mean)/(std+1e-7)
-        self.x_test = (self.x_test-mean)/(std+1e-7)
+        if not self.normalized:
+            mean = np.mean(self.x_train, axis=(0,1,2,3))
+            std = np.std(self.x_train, axis=(0, 1, 2, 3))
+            self.x_train = (self.x_train-mean)/(std+1e-7)
+            self.x_test = (self.x_test-mean)/(std+1e-7)
+        self.normalized = True

@@ -3,7 +3,7 @@
 """
 Created on Wed Jan 31 18:53:31 2018
 
-@author: guy.hacohen
+@author: stenly
 """
 import numpy as np
 
@@ -21,7 +21,7 @@ import pickle
 import argparse
 import time
 import scipy
-import matplotlib.pyplot as plt
+
 
 def exponent_decay_lr_generator(decay_rate, minimum_lr, batch_to_decay):
     cur_lr = None
@@ -232,73 +232,16 @@ def load_order(order_name, dataset):
         raise ValueError
     
     return order
-
-
-def combine_histories(history_list):
     
-    num_repeats = len(history_list)
     
-    combined_history = histories[0].copy()
-    for key in ["loss", "acc", "val_loss", "val_acc"]:
-        size_key = len(history_list[0][key])
-        results = np.zeros((args.repeats, size_key))
-        for i in range(num_repeats):
-            results[i, :] = history_list[i][key]
-        combined_history[key] = np.mean(results, axis=0)
-        if key == "acc":
-            if num_repeats >1:
-                combined_history["std_acc"] = scipy.stats.sem(results, axis=0)
-            else:
-                combined_history["std_acc"] = None
-        if key == "val_acc":
-            if num_repeats >1:
-                combined_history["std_val_acc"] = scipy.stats.sem(results, axis=0)
-            else:
-                combined_history["std_val_acc"] = None
-    
-    return combined_history
-
-
-
-def graph_from_history(history, plot_train=False, plot_test=True):
-    
-    fig, axs = plt.subplots(figsize=(10,5))
-    
-    if plot_train:
-        x = np.array(history['batch_num'])
-        y = history['acc'][x]
-        error = history['std_acc'][x]
-        
-        if error is not None:
-            axs.errorbar(x, y, error, marker='^', label="train")
-        else:
-            plt.plot(x, y, label="train")
-    
-    if plot_test:
-        x = np.array(history['batch_num'])
-        y = history['val_acc']
-        error = history['std_val_acc']
-        
-        if error is not None:
-            axs.errorbar(x, y, error, marker='^', label="test")
-        else:
-            plt.plot(x, y, label="test")
-        
-        
-    
-    axs.set_xlabel("batch number")
-    axs.set_ylabel("accuracy")
-    plt.legend()
-#    axs.legend(loc="best")
-
-  
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='')
 
     parser.add_argument("--dataset", default="cifar100_subset_16", help="dataset to use")
     parser.add_argument("--model", default="stVGG", help="which model to train to the dataset on")
-    parser.add_argument("--output_path", default=r'', help="where to save the model")
+    parser.add_argument("--model_dir", default=r'../models/', help="where to save the model")
+    parser.add_argument("--output_name", default="", help="name of output file - will be added to model_dir")
     parser.add_argument("--verbose", default=True, type=bool, help="print more stuff")
     
     parser.add_argument("--optimizer", default="sgd", help="")
@@ -310,7 +253,6 @@ if __name__ == "__main__":
     parser.add_argument("--curriculum_scheduler", default="adaptive")
     parser.add_argument("--batch_size", default=100, type=int)
     parser.add_argument("--num_epochs", default=140, type=int)
-#    parser.add_argument("--num_epochs", default=10, type=int)
 
     # lr params    
     parser.add_argument("--learning_rate", "-lr", default=0.03, type=float)
@@ -330,6 +272,8 @@ if __name__ == "__main__":
     parser.add_argument("--momentum", default=0.0, type=float)
     parser.add_argument("--balance", default=True, help="balance the ordering of the curriculum")
     
+
+        
     parser.add_argument("--save_model", default=False)
     
     args = parser.parse_args()
@@ -343,90 +287,101 @@ if __name__ == "__main__":
     
     dataset = load_dataset(args.dataset)
     model_lib = load_model(args.model)
-
+    
+    model_dir = args.model_dir
     size_train = dataset.x_train.shape[0]
-    num_batches = (args.num_epochs * size_train) // args.batch_size
+    num_batchs = (args.num_epochs * size_train) // args.batch_size
 
     lr_scheduler = exponent_decay_lr_generator(args.lr_decay_rate,
                                                args.minimal_lr,
                                                args.lr_batch_size)
     
     order = load_order(args.order, dataset)
-
-    if args.balance:
-        order = balance_order(order, dataset)    
+    
     
     if args.curriculum == "anti":
         order = np.flip(order, 0)
     elif args.curriculum == "random":
         np.random.shuffle(order)
-        
     elif (args.curriculum not in ["None", "curriculum", "vanilla", "self_pace",
                                   "anti_self_pace"]):
         print("--curriculum value of %s is not supported!" % args.curriculum)
         raise ValueError
         
+    if args.balance:
+        order = balance_order(order, dataset)
         
     dataset.normalize_dataset()
 
-    if args.output_path:
-        output_path = args.output_path
+    if args.output_name:
+        output_path = os.path.join(args.model_dir, args.output_name)
     else:
         output_path = None
+
+    data_function = data_function_from_input(args.curriculum, args.batch_size,
+                                             dataset, order, args.batch_increase,
+                                             args.increase_amount, args.starting_percent)
     
     ## start expriment
     start_time_all = time.time()
     histories =[]
     for repeat in range(args.repeats):
         
-        data_function = data_function_from_input(args.curriculum,
-                                                 args.batch_size,
-                                                 dataset,
-                                                 order,
-                                                 args.batch_increase,
-                                                 args.increase_amount,
-                                                 args.starting_percent)
+        data_function = data_function_from_input(args.curriculum, args.batch_size,
+                                         dataset, order, args.batch_increase,
+                                         args.increase_amount, args.starting_percent)
         
         print("starting repeat number: " + str(repeat))
         model = model_lib.build_classifier_model(dataset,
-                                                 dropout_1_rate=args.dropout1,
-                                                 dropout_2_rate=args.dropout2,
+                                                 dropout_1_rate=args.dropout1, dropout_2_rate=args.dropout2,
                                                  reg_factor=args.l2_reg,
                                                  bias_reg_factor=args.bias_l2_reg)
-        
-        train_keras_model.compile_model(model,
-                                        initial_lr=args.learning_rate,
+        train_keras_model.compile_model(model, initial_lr=args.learning_rate,
                                         loss='categorical_crossentropy',
-                                        optimizer=args.optimizer,
+                                        optimizer=args.optimizer, metrics=['accuracy'],
                                         momentum=args.momentum)
-        
-        
-        
-        history = train_keras_model.train_model_batches(model,
-                                                        dataset,
-                                                        num_batches,
-                                                        verbose=args.verbose,
+        history = train_keras_model.train_model_batches(model, dataset.x_train, dataset.y_train_labels, dataset.x_test,
+                                                        dataset.y_test_labels, num_batchs, verbose=args.verbose,
                                                         batch_size=args.batch_size,
                                                         test_each=args.test_each,
                                                         initial_lr=args.learning_rate,
-                                                        lr_scheduler=lr_scheduler,
-                                                        data_function=data_function)
+                                                        lr_scheduler=lr_scheduler, loss='categorical_crossentropy',
+                                                        optimizer=args.optimizer, Compile=False,
+                                                        metrics=['accuracy'],
+                                                        data_function=data_function,
+                                                        reduce_history=False,
+                                                        save_each=args.save_each,
+                                                        save_results=False,
+                                                        net_num=repeat)
 
         histories.append(history)
-        if output_path and args.save_model:
-            model.save(output_path + "_model_num"+str(repeat))
+        if output_path is not None:
+            if args.save_model:
+                model.save(output_path + "_model_num"+str(repeat))
 
     print("time all: --- %s seconds ---" % (time.time() - start_time_all))
     
-    
-    combined_history = combine_histories(histories)
-    
-    if output_path:
+
+    if output_path is not None:
+        print('saving trained model to:', output_path)
+        combined_history = histories[0].copy()
+        for key in ["loss", "acc", "val_loss", "val_acc"]:
+            results = np.zeros((args.repeats, len(histories[0][key])))
+            for i in range(args.repeats):
+                results[i, :] = histories[i][key]
+            combined_history[key] = np.mean(results, axis=0)
+            if key == "acc":
+                combined_history["std_acc"] = scipy.stats.sem(results, axis=0)
+            if key == "val_acc":
+                combined_history["std_val_acc"] = scipy.stats.sem(results, axis=0)
         with open(output_path + "_history", 'wb') as file_pi:
             pickle.dump(combined_history, file_pi)
-        
-    print("training acc:", combined_history['acc'][-1])
-    print("test acc:", combined_history['val_acc'][-1])
+#            if args.save_model:
+#                model.save(output_path)
+        print(combined_history["loss"])
+
+    train_predictions = model.predict(dataset.x_train)
+    test_predictions = model.predict(dataset.x_test)
+    print("training acc:", np.mean(np.argmax(train_predictions, axis=1) == dataset.y_train))
+    print("test acc:", np.mean(np.argmax(test_predictions, axis=1) == dataset.y_test))
     
-    graph_from_history(combined_history, plot_train=False, plot_test=True)
-        

@@ -272,6 +272,10 @@ example_validation_anti_single_step = base_4 + r"validation_long_norm_inception_
 example_validation_curriculum_single_step = base_4 + r"validation_long_norm_inception_16_curriculum_sgd_single_step_balance_lr_${lrate}_100_0.05_decay${decay}_min1e-4_lrjmp{lrjump}_history"
 example_validation_random_single_step = base_4 + r"validation_long_norm_inception_16_random_sgd_single_step_balance_lr_${lrate}_100_0.05_decay${decay}_min1e-4_lrjmp{lrjump}_history"
 
+# github reproduce
+base_git = r"/cs/labs/daphna/guy.hacohen/project/ICML2019/github/models/"
+example_github_curriculum = base_git + r"grid_channel_wise_norm_subset_16_curriculum_lr_${lrate}_jmp_${jmp}_inc_1.9_start_0.04_decay_${decay}_min_1e-4_lrjmp_${lrjump}_history"
+example_github_vanilla = base_git + r"grid_channel_wise_norm_subset_16_vanilla_lr_${lrate}_jmp_100_inc_1.9_start_0.04_decay_${decay}_min_1e-4_lrjmp_${lrjump}_history"
 
 COLORS = ["blue", "red", "green", "yellow", "purple", "orange", "pink", "brown"]
 
@@ -314,6 +318,53 @@ def problem1_curriculum_vanilla_anti_random_graph(curriculum_base, random_base,
                         colors=colors,
                         figsize=(10,4))
     
+
+def problem1_github_graph(curriculum_base, vanilla_base):
+#                          anti_base, random_base):
+
+    num_non_vanilla = 3
+
+    colors = [COLORS[i] for i in range(num_non_vanilla)]
+    in_graph_params = {
+        "lrate": [0.025, 0.03, 0.035, 0.04, 0.045],
+        "decay": [1.1, 1.3, 1.5, 1.7, 1.9],
+        "lrjump": [100, 300, 500, 700, 900],
+        "minimal": ["1e-4"],
+        "inc": [1.9],
+        "jmp": [50, 75, 100, 200, 300, 400, 500],
+        "strt": [0.04],
+        }
+
+    curriculum_grid_search = choose_lr_parameters(curriculum_base, in_graph_params)
+#    anti_grid_search = choose_lr_parameters(anti_base, in_graph_params)
+#    random_grid_search = choose_lr_parameters(random_base, in_graph_params)
+    
+    
+    in_graph_params = {
+        "lrate": [0.02, 0.025, 0.03, 0.035, 0.04, 0.045,
+                  0.05, 0.055, 0.06, 0.065, 0.07],
+        "decay": [1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9],
+        "lrjump": [100, 200, 300, 400, 500,
+                   600, 700, 800, 900],
+        "minimal": ["1e-4"],
+        "inc": [1.9],
+        "jmp": [100],
+        "strt": [0.04],
+        }
+        
+    vanilla_grid_search = choose_lr_parameters(vanilla_base, in_graph_params)
+    plot_history_list([vanilla_grid_search,
+                       curriculum_grid_search],
+#                       anti_grid_search,
+#                       random_grid_search],
+                       ["Vanilla",
+                        "Curriculum"],
+#                        "Anti Curriculum",
+#                        "Random"],
+                        "",
+                        bold_first=True,
+                        colors=colors)
+
 
 def problem23_curriculum_vanilla_graph(curriculum_base, vanilla_base,
                                        cifar_name):
@@ -904,6 +955,12 @@ if __name__ == "__main__":
 #                                                  example_output_path_anti,
 #                                                  example_output_path_vanilla)
     
+    
+    print("problem1 - github")
+    problem1_github_graph(example_github_curriculum,
+                          example_github_vanilla)
+    
+    
 #    print("problem2 - cifar10")
 #    problem23_curriculum_vanilla_graph(exmaple_output_cifar_10_curriculum,
 #                                       exmaple_output_cifar_10_vanilla,
@@ -914,11 +971,11 @@ if __name__ == "__main__":
 #                                       exmaple_output_cifar_100_vanilla,
 #                                       "Cifar-100")
 ##    
-    print("problem4 - cifar100")
-    problem45_vgg_curriculum_vanilla_graph(example_output_vgg_cifar100_curriculum,
-                                           example_output_vgg_cifar100_vanilla,
-                                           example_output_vgg_cifar100_2_jumps,
-                                           "Cifar-100")
+#    print("problem4 - cifar100")
+#    problem45_vgg_curriculum_vanilla_graph(example_output_vgg_cifar100_curriculum,
+#                                           example_output_vgg_cifar100_vanilla,
+#                                           example_output_vgg_cifar100_2_jumps,
+#                                           "Cifar-100")
 ##    
 ##    print("problem4 - cifar10")
 ##    problem45_vgg_curriculum_vanilla_graph(example_output_vgg_cifar10_curriculum,

@@ -3,7 +3,7 @@
 """
 Created on Wed Jan 31 15:03:40 2018
 
-@author: stenly
+@author: guy.hacohen
 """
 import os
 import download
@@ -138,21 +138,23 @@ class Cifar100_Subset(datasets.Dataset.Dataset):
         super(Cifar100_Subset, self).update_data_set(smaller_data_set)
         
     def normalize_dataset(self):
-        self.x_train = self.x_train.astype('float32')
-        self.x_test = self.x_test.astype('float32')
-        mean_r = np.mean(self.x_train[:,:,:,0])
-        mean_g = np.mean(self.x_train[:,:,:,1])
-        mean_b = np.mean(self.x_train[:,:,:,2])
-        
-        std_r = np.std(self.x_train[:,:,:,0])
-        std_g = np.std(self.x_train[:,:,:,1])
-        std_b = np.std(self.x_train[:,:,:,2])
-        
-        
-        self.x_train[:,:,:,0] = (self.x_train[:,:,:,0] - mean_r) / std_r
-        self.x_train[:,:,:,1] = (self.x_train[:,:,:,1] - mean_g) / std_g
-        self.x_train[:,:,:,2] = (self.x_train[:,:,:,2] - mean_b) / std_b
-        
-        self.x_test[:,:,:,0] = (self.x_test[:,:,:,0] - mean_r) / std_r
-        self.x_test[:,:,:,1] = (self.x_test[:,:,:,1] - mean_g) / std_g
-        self.x_test[:,:,:,2] = (self.x_test[:,:,:,2] - mean_b) / std_b
+        if not self.normalized:
+            self.x_train = self.x_train.astype('float32')
+            self.x_test = self.x_test.astype('float32')
+            mean_r = np.mean(self.x_train[:,:,:,0])
+            mean_g = np.mean(self.x_train[:,:,:,1])
+            mean_b = np.mean(self.x_train[:,:,:,2])
+            
+            std_r = np.std(self.x_train[:,:,:,0])
+            std_g = np.std(self.x_train[:,:,:,1])
+            std_b = np.std(self.x_train[:,:,:,2])
+            
+            
+            self.x_train[:,:,:,0] = (self.x_train[:,:,:,0] - mean_r) / std_r
+            self.x_train[:,:,:,1] = (self.x_train[:,:,:,1] - mean_g) / std_g
+            self.x_train[:,:,:,2] = (self.x_train[:,:,:,2] - mean_b) / std_b
+            
+            self.x_test[:,:,:,0] = (self.x_test[:,:,:,0] - mean_r) / std_r
+            self.x_test[:,:,:,1] = (self.x_test[:,:,:,1] - mean_g) / std_g
+            self.x_test[:,:,:,2] = (self.x_test[:,:,:,2] - mean_b) / std_b
+        self.normalized = True
