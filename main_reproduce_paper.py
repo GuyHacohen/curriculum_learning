@@ -161,7 +161,7 @@ def vanilla_cifar100_st_vgg(repeats, output_path=""):
     args = Namespace(dataset="cifar100",
                      model='stVGG',
                      output_path=output_path,
-                     verbose=True,
+                     verbose=False,
                      optimizer="sgd",
                      curriculum="vanilla",
                      batch_size=100,
@@ -184,7 +184,7 @@ def curriculum_cifar100_st_vgg(repeats, output_path=""):
     args = Namespace(dataset="cifar100",
                      model='stVGG',
                      output_path=output_path,
-                     verbose=True,
+                     verbose=False,
                      optimizer="sgd",
                      curriculum="curriculum",
                      batch_size=100,
@@ -206,7 +206,7 @@ def curriculum_cifar100_st_vgg(repeats, output_path=""):
 
 if __name__ == "__main__":
     output_path = ""
-    num_repeats = 1
+    num_repeats = 10
     
 #    import datasets.cifar100
 #    
@@ -216,11 +216,11 @@ if __name__ == "__main__":
     #case 2 & 3
 #    vanilla_cifar10_st_vgg(num_repeats, output_path=output_path)
 #    curriculum_cifar10_st_vgg(num_repeats, output_path=output_path)
-    vanilla_cifar100_st_vgg(num_repeats, output_path=output_path)
+#    vanilla_cifar100_st_vgg(num_repeats, output_path=output_path)
 #    curriculum_cifar100_st_vgg(num_repeats, output_path=output_path)
     
     # case 1
-#    curriculum_small_mammals(num_repeats, output_path=output_path)
+    curriculum_small_mammals(num_repeats, output_path=output_path)
 #    vanilla_small_mammals(num_repeats, output_path=output_path)
 #    anti_curriculum_small_mammals(num_repeats, output_path=output_path)
 #    random_small_mammals(num_repeats, output_path=output_path)
