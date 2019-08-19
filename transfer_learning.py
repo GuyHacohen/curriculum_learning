@@ -122,8 +122,19 @@ def transfer_values_svm_scores(train_x, train_y, test_x, test_y):
     train_scores = clf.predict_proba(train_x)
     return train_scores, test_scores
 
+def svm_scores_exists(dataset, network_name="inception",
+                      alternative_data_dir="."):
+    if dataset is None:
+        data_dir = alternative_data_dir
+    else:
+        data_dir = dataset.data_dir
+    
+    svm_train_path = os.path.join(data_dir, network_name + 'svm_train_values.pkl')
+    svm_test_path = os.path.join(data_dir, network_name + 'svm_test_values.pkl')
+    return os.path.exists(svm_train_path) and os.path.exists(svm_test_path)
 
-def get_svm_scores(transfer_values_train, y_train, transfer_values_test, y_test, dataset, network_name="inception",
+def get_svm_scores(transfer_values_train, y_train, transfer_values_test,
+                   y_test, dataset, network_name="inception",
                    alternative_data_dir="."):
     
     if dataset is None:

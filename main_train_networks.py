@@ -12,6 +12,8 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 import datasets.cifar100_subset
+import datasets.cifar10
+import datasets.cifar100
 import models.cifar100_model
 import train_keras_model
 import transfer_learning
@@ -110,7 +112,13 @@ def load_dataset(dataset_name):
         superclass_idx = int(dataset_name[len("cifar100_subset_"):])
         dataset = datasets.cifar100_subset.Cifar100_Subset(supeclass_idx=superclass_idx,
                                                   normalize=False)
+    
+    elif dataset_name == "cifar10":
+        dataset = datasets.cifar10.Cifar10(normalize=False)
 
+    elif dataset_name == "cifar100":
+        dataset = datasets.cifar100.Cifar100(normalize=False)
+        
     else:
         print("do not support datset: %s" % dataset_name)
         raise ValueError
@@ -126,12 +134,16 @@ def load_order(order_name, dataset):
     classic_networks = ["vgg16", "vgg19", "inception", "xception", "resnet"]
     if order_name in classic_networks:
         network_name = order_name
-        if order_name == "inception":
-            (transfer_values_train, transfer_values_test) = transfer_learning.get_transfer_values_inception(dataset)
-
+        if not transfer_learning.svm_scores_exists(dataset,
+                                                   network_name=network_name):
+            if order_name == "inception":
+                (transfer_values_train, transfer_values_test) = transfer_learning.get_transfer_values_inception(dataset)
+    
+            else:
+                (transfer_values_train, transfer_values_test) = transfer_learning.get_transfer_values_classic_networks(dataset,
+                                                                                                                       network_name)
         else:
-            (transfer_values_train, transfer_values_test) = transfer_learning.get_transfer_values_classic_networks(dataset,
-                                                                                                                   network_name)
+            (transfer_values_train, transfer_values_test) = (None, None)
 
         train_scores, test_scores = transfer_learning.get_svm_scores(transfer_values_train, dataset.y_train,
                                                                      transfer_values_test, dataset.y_test, dataset,
@@ -212,7 +224,6 @@ def run_expriment(args):
     lr_scheduler = exponent_decay_lr_generator(args.lr_decay_rate,
                                                args.minimal_lr,
                                                args.lr_batch_size)
-    
     order = load_order(args.order, dataset)
 
     order = balance_order(order, dataset)    

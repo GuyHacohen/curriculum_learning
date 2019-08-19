@@ -24,7 +24,7 @@ class Cifar100(datasets.Dataset.Dataset):
         self.data_url = r"https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz"
 
         # Directory to store the downloaded data.
-        self.data_dir = "../data/cifar100/"
+        self.data_dir = "./data/cifar100/"
 
         self.height, self.width, self.depth = 32, 32, 3
         self.n_classes = len(self.subsets_idxes)
